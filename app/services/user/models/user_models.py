@@ -52,6 +52,13 @@ class User(Base):
             "profile_pic_url": self.profile_pic_url,
             "kyc_status": self.kyc_status,
             "profile_complete_pct": self.profile_complete_pct,
+            "roles": [
+                        {
+                            "role_id": role.role_id,
+                            "permissions": role.role.permissions if role.role and role.role.permissions else []
+                        }
+                        for role in self.roles
+                    ] if self.roles else [],
             "languages": self.languages,
             "is_active": self.is_active,
             "is_deleted": self.is_deleted,
@@ -81,16 +88,16 @@ class UserRole(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
-    role_id = Column(UUID(as_uuid=True), ForeignKey('roles.id'))
+    role_id = Column(String, ForeignKey('roles.id'), nullable=False)
 
     user = relationship("User", back_populates="roles")
+    role = relationship("Roles")
 
 
 class Roles(Base):
     __tablename__ = 'roles'
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    name = Column(String)
+    id = Column(String, primary_key=True)
     permissions = Column(JSON)
 
 

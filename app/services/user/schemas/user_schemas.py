@@ -1,8 +1,9 @@
 from pydantic import BaseModel, EmailStr, constr, Field
 from typing import Optional, List
 from uuid import UUID
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, constr, field_validator
 from datetime import date
+from app.utils.constants import ROLE_CODE_MAP
 
 
 class UserRegisterRequest(BaseModel):
@@ -13,8 +14,16 @@ class UserRegisterRequest(BaseModel):
     password: constr(min_length=8)
     dob: Optional[date]  # ISO8601 string (e.g. 1990-01-01)
     gender: Optional[str] = Field(None, pattern="^(Male|Female|Other)$")
-    company_id: Optional[UUID]
+    company_id: Optional[UUID] = None
     languages: Optional[List[str]] = []
+    role: int = Field(..., description="Random numeric code representing the role")
+
+    @field_validator("role")
+    @classmethod
+    def validate_role(cls, value):
+        if value not in ROLE_CODE_MAP:
+            raise ValueError("Invalid role code")
+        return ROLE_CODE_MAP[value]
 
     class Config:
         json_schema_extra = {
@@ -26,7 +35,6 @@ class UserRegisterRequest(BaseModel):
                 "password": "StrongPass123@",
                 "dob": "1990-05-15",
                 "gender": "Male",
-                "company_id": "c245e5a4-99b8-4c34-ae83-3b993f660001",
                 "languages": ["English", "Hindi"]
             }
         }

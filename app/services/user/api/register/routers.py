@@ -60,10 +60,10 @@ async def request_otp(data: OTPRequest, db: AsyncSession = Depends(get_db)):
 
 @router.post("/auth/verify-otp", status_code=status.HTTP_200_OK)
 async def request_otp(data: VerifyOTPRequest, db: AsyncSession = Depends(get_db)):
-    try:
-        auth_service = AuthService(db)
-        response = await auth_service.verify_user_otp(data)
 
+    auth_service = AuthService(db)
+    response = await auth_service.verify_user_otp(data)
+    try:
         await db.commit()
         if response.get("success"):
             return {

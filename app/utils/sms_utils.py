@@ -110,7 +110,7 @@ class SMSUtils:
         """
         Verifies OTP from the database.
         """
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         stmt = select(OTP).where(
             OTP.phone_number == phone_number
