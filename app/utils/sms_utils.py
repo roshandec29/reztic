@@ -81,7 +81,7 @@ class SMSUtils:
             raise ValueError("Invalid provider. Choose from 'fast2sms', 'smshorizon', 'textlocal', 'exotel'.")
 
     async def generate_otp(self, db: AsyncSession, phone_number: str, otp_type: str) -> str:
-        otp = str(random.randint(100000, 999999))
+        otp = str(random.randint(1000, 9999))
 
         # delete old OTP
         await db.execute(

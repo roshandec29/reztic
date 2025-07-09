@@ -46,4 +46,4 @@ class OTPRequest(BaseModel):
 
 class VerifyOTPRequest(BaseModel):
     phone: constr(min_length=10, max_length=15)
-    otp: constr(min_length=6, max_length=6)
+    otp: constr(min_length=4, max_length=4)

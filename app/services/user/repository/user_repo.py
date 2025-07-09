@@ -6,6 +6,7 @@ from fastapi import Depends
 from app.utils.password import hash_password
 from sqlalchemy.orm import selectinload
 
+
 class UserRepo:
     def __init__(self, db: AsyncSession = Depends(get_db)):
         self.db = db
