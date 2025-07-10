@@ -15,3 +15,4 @@ app = FastAPI(title="Reztic AI", version="1.0.0", lifespan=lifespan)
 
 app.include_router(common_services.healthcheck.routers.router, prefix="/v1")
 app.include_router(user.api.register.routers.router)
+app.include_router(common_services.upload.routers.router)
