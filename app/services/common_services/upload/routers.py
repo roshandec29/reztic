@@ -1,5 +1,5 @@
 from fastapi import APIRouter, UploadFile, File, HTTPException, status, Form
-from app.handlers.image_handler import FileUploadHandler
+from app.handlers.file_handler import FileUploadHandler
 
 router = APIRouter(prefix="/api/v1/media", tags=["media"])
 file_uploader = FileUploadHandler()
