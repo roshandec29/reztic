@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi.responses import JSONResponse
 from app.db.connection import get_db
 from app.services.projects.schemas.project_schemas import ProjectListFilters, PaginatedProjectListResponse
 from app.services.projects.service.project_service import ProjectService
@@ -21,7 +22,7 @@ async def get_projects(
             "limit": filters.limit,
         }
     except Exception as e:
-        return {
-            "message": "Failed to fetch projects",
-            "error": str(e)
-        }
+        return JSONResponse(
+            status_code=500,
+            content={"status": 500, "msg": "Failed to fetch projects", "error": str(e)}
+        )

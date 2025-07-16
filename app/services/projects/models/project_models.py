@@ -27,6 +27,7 @@ class Project(Base):
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     units = relationship("ProjectUnit", backref="project", cascade="all, delete-orphan")
     media = relationship("ProjectMedia", backref="project", cascade="all, delete-orphan")
+    locality = relationship("Locality", backref="project")
 
 
 class ProjectUnit(Base):

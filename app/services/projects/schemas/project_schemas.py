@@ -172,6 +172,7 @@ class FullProjectResponse(BaseModel):
     # Nested
     units: List[ProjectUnitResponse] = []
     media: List[ProjectMediaResponse] = []
+    locality: Optional[str]
 
     model_config = {
         "from_attributes": True
@@ -187,6 +188,14 @@ class FullProjectResponse(BaseModel):
     def extract_created_date(cls, v: datetime):
         if isinstance(v, datetime):
             return v.date()
+        return v
+
+    @field_validator("locality", mode="before")
+    def extract_locality_name(cls, v):
+        if isinstance(v, dict):
+            return v.get("name")
+        elif hasattr(v, "name"):
+            return v.name
         return v
 
 

@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, func, desc, asc
 from app.services.projects.schemas.project_schemas import ProjectListFilters
 from sqlalchemy.orm import selectinload
+from app.services.geolocation.models.geolocation_models import Locality
 
 
 async def get_project_by_name_and_developer(name: str, developer_id: str, db: AsyncSession):
@@ -32,9 +33,10 @@ async def create_project_media(project_id, media_data, db: AsyncSession):
 
 
 async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
-    query = select(Project).options(
+    query = select(Project).join(Project.locality).options(
         selectinload(Project.units),
         selectinload(Project.media),
+        selectinload(Project.locality),
     )
 
     # Text search
@@ -43,7 +45,7 @@ async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
         query = query.where(
             or_(
                 func.lower(Project.name).like(pattern),
-                func.lower(Project.rera_number).like(pattern),
+                func.lower(Locality.name).like(pattern)
             )
         )
 
