@@ -15,7 +15,7 @@ async def create_project(
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        project = await ProjectService().create_project(payload, db)
+        project = await ProjectService(db).create_project(payload)
         await db.commit()
         await db.refresh(project)
         return project

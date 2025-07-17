@@ -173,6 +173,7 @@ class FullProjectResponse(BaseModel):
     units: List[ProjectUnitResponse] = []
     media: List[ProjectMediaResponse] = []
     locality: Optional[str]
+    full_address: Optional[str]
 
     model_config = {
         "from_attributes": True
@@ -196,6 +197,14 @@ class FullProjectResponse(BaseModel):
             return v.get("name")
         elif hasattr(v, "name"):
             return v.name
+        return v
+
+    @field_validator("full_address", mode="before")
+    def extract_full_address(cls, v):
+        if isinstance(v, dict):
+            return v.get("full_address")
+        elif hasattr(v, "full_address"):
+            return v.full_address
         return v
 
 

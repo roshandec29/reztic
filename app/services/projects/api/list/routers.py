@@ -14,7 +14,7 @@ async def get_projects(
     db: AsyncSession = Depends(get_db),
 ):
     try:
-        projects, total = await ProjectService().list_projects(db, filters)
+        projects, total = await ProjectService(db).list_projects(filters)
         return {
             "projects": projects,
             "total": total,

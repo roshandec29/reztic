@@ -1,12 +1,14 @@
 from app.services.projects.models.project_models import Project, ProjectUnit, ProjectMedia
+from app.services.geolocation.models.geolocation_models import Area, City, State
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, func, desc, asc
 from app.services.projects.schemas.project_schemas import ProjectListFilters
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectinload, joinedload
 from app.services.geolocation.models.geolocation_models import Locality
+from uuid import UUID
 
 
-async def get_project_by_name_and_developer(name: str, developer_id: str, db: AsyncSession):
+async def get_project_by_name_and_developer(name: str, developer_id: UUID, db: AsyncSession):
     result = await db.execute(
         select(Project).where(Project.name == name, Project.developer_id == developer_id)
     )
@@ -86,3 +88,21 @@ async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
     total_count = total_result.scalar()
 
     return projects, total_count
+
+
+async def get_project_detail_id(session: AsyncSession, project_id: UUID):
+
+    query = select(Project).where(Project.id == project_id).options(
+        joinedload(Project.locality)
+        .joinedload(Locality.area)
+        .joinedload(Area.city)
+        .joinedload(City.state)
+        .joinedload(State.country),
+        selectinload(Project.units),
+        selectinload(Project.media)
+    )
+
+    response = await session.execute(query)
+    project_detail = response.scalars().first()
+
+    return project_detail
