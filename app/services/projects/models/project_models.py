@@ -23,6 +23,8 @@ class Project(Base):
     starting_price = Column(DECIMAL)
     price_range = Column(JSON)
     commission_structure = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     units = relationship("ProjectUnit", backref="project", cascade="all, delete-orphan")
@@ -43,6 +45,10 @@ class ProjectUnit(Base):
     total_units = Column(Integer)
     available_units = Column(Integer)
     price = Column(DECIMAL)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
 
 class ProjectMedia(Base):
@@ -54,6 +60,8 @@ class ProjectMedia(Base):
     is_featured = Column(Boolean, default=False)
     media_url = Column(Text, nullable=False)
     meta_json = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
 
 
 class ResaleListing(Base):
@@ -70,6 +78,8 @@ class ResaleListing(Base):
     description = Column(Text)
     possession_status = Column(String)  # ready_to_move, under_construction
     verified = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
@@ -84,5 +94,7 @@ class Developer(Base):
     logo_url = Column(Text)
     rera_number = Column(String, unique=True)
     locality_id = Column(UUID(as_uuid=True), ForeignKey("localities.id"), nullable=False)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

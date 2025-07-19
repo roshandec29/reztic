@@ -173,7 +173,7 @@ class FullProjectResponse(BaseModel):
     units: List[ProjectUnitResponse] = []
     media: List[ProjectMediaResponse] = []
     locality: Optional[str]
-    full_address: Optional[str]
+    full_address: Optional[str] = ""
 
     model_config = {
         "from_attributes": True

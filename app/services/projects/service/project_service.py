@@ -48,7 +48,13 @@ class ProjectService:
         self, filters: ProjectListFilters
     ) -> Tuple[List[FullProjectResponse], int]:
         projects, total = await fetch_projects(self.db, filters)
-        return [FullProjectResponse.from_orm(p) for p in projects], total
+        response = []
+
+        for p in projects:
+            p.full_address = p.locality.full_address
+            response.append(FullProjectResponse.from_orm(p))
+
+        return response, total
 
     async def get_project_details(self, project_id: UUID) -> FullProjectResponse:
         project = await get_project_detail_id(self.db, project_id)

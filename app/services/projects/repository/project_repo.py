@@ -36,9 +36,13 @@ async def create_project_media(project_id, media_data, db: AsyncSession):
 
 async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
     query = select(Project).join(Project.locality).options(
+        joinedload(Project.locality)
+        .joinedload(Locality.area)
+        .joinedload(Area.city)
+        .joinedload(City.state)
+        .joinedload(State.country),
         selectinload(Project.units),
-        selectinload(Project.media),
-        selectinload(Project.locality),
+        selectinload(Project.media)
     )
 
     # Text search

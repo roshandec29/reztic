@@ -77,6 +77,8 @@ class UserAddress(Base):
     address_line2 = Column(String)
     locality_id = Column(UUID(as_uuid=True))
     is_primary = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -119,6 +121,8 @@ class UserPreference(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey('users.id'))
     preferences = Column(JSON)
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime, server_default=func.now(), nullable=False)
     updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -150,7 +154,8 @@ class Company(Base):
     website = Column(String(255), nullable=True)
     logo_url = Column(Text, nullable=True)
     locality_id = Column(UUID(as_uuid=True), nullable=True)
-
+    is_active = Column(Boolean, default=True)
+    is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime, default=func.now(), nullable=False)
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now(), nullable=False)
 
