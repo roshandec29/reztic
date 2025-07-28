@@ -1,4 +1,6 @@
-from app.services.projects.models.project_models import Project, ProjectUnit, ProjectMedia
+from app.services.projects.models.project_models import Project, ProjectUnit, ProjectMedia, ProjectCommission
+from app.services.projects.models.other_models import ProjectAmenity, ParkingCharge, NearbyLandmark
+from app.services.projects.models.payment_plan_models import PaymentPlan, PaymentPlanBreakup, AdditionalCharge
 from app.services.geolocation.models.geolocation_models import Area, City, State
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, or_, and_, func, desc, asc
@@ -34,6 +36,37 @@ async def create_project_media(project_id, media_data, db: AsyncSession):
     await db.flush()
 
 
+async def create_project_amenities(project_id, amenities, db: AsyncSession):
+    for amenity in amenities:
+        db.add(ProjectAmenity(project_id=project_id, **amenity.dict()))
+
+
+async def create_project_payment(project_id, payment, db: AsyncSession):
+    payment_plan= PaymentPlan(project_id=project_id, plan_name=payment.plan_name, description=payment.description)
+    db.add(payment_plan)
+    await db.flush()
+    payment_plan_id = payment_plan.id
+    for breakup in payment.breakup_create:
+        db.add(PaymentPlanBreakup(payment_plan_id=payment_plan_id, **breakup.dict()))
+
+
+async def create_project_additional_charges(project_id, charges, db: AsyncSession):
+    db.add(AdditionalCharge(project_id=project_id, **charges.dict()))
+
+
+async def create_project_commission(project_id, commission, db: AsyncSession):
+    db.add(ProjectCommission(project_id=project_id, **commission.dict()))
+
+
+async def create_project_parking(project_id, parking, db: AsyncSession):
+    db.add(ParkingCharge(project_id=project_id, **parking.dict()))
+
+
+async def create_project_nearby_landmarks(project_id, landmarks, db: AsyncSession):
+    for nl in landmarks:
+        db.add(NearbyLandmark(project_id=project_id, **nl.dict()))
+
+
 async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
     query = select(Project).join(Project.locality).options(
         joinedload(Project.locality)
@@ -42,7 +75,13 @@ async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
         .joinedload(City.state)
         .joinedload(State.country),
         selectinload(Project.units),
-        selectinload(Project.media)
+        selectinload(Project.media),
+        selectinload(Project.nearby_landmarks),
+        selectinload(Project.additional_charges),
+        selectinload(Project.parking),
+        selectinload(Project.payment_plan),
+        selectinload(Project.commissions),
+        selectinload(Project.amenities).joinedload(ProjectAmenity.amenity)
     )
 
     # Text search
@@ -56,8 +95,8 @@ async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
         )
 
     # Filters
-    if filters.status:
-        query = query.where(Project.status == filters.status)
+    if filters.development_stage:
+        query = query.where(Project.development_stage == filters.development_stage)
     if filters.locality_id:
         query = query.where(Project.locality_id == filters.locality_id)
     if filters.developer_id:
@@ -96,14 +135,20 @@ async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
 
 async def get_project_detail_id(session: AsyncSession, project_id: UUID):
 
-    query = select(Project).where(Project.id == project_id).options(
+    query = select(Project).join(Project.locality).where(Project.id == project_id).options(
         joinedload(Project.locality)
         .joinedload(Locality.area)
         .joinedload(Area.city)
         .joinedload(City.state)
         .joinedload(State.country),
         selectinload(Project.units),
-        selectinload(Project.media)
+        selectinload(Project.media),
+        selectinload(Project.nearby_landmarks),
+        selectinload(Project.additional_charges),
+        selectinload(Project.parking),
+        selectinload(Project.payment_plan).joinedload(PaymentPlan.breakups),
+        selectinload(Project.commissions),
+        selectinload(Project.amenities).joinedload(ProjectAmenity.amenity)
     )
 
     response = await session.execute(query)

@@ -4,6 +4,7 @@ from fastapi.responses import JSONResponse
 from app.db.connection import get_db
 from uuid import UUID
 from app.services.projects.service.project_service import ProjectService
+from app.utils.errors import ProjectNotFound
 
 router = APIRouter(prefix="/api/v1/project", tags=["projects"])
 
@@ -15,6 +16,11 @@ async def get_projects(
     try:
         project_detail = await ProjectService(db).get_project_details(project_id)
         return project_detail
+    except ProjectNotFound as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"status": e.status_code, "msg": "Failed to fetch projects", "error": str(e.detail)}
+        )
     except Exception as e:
         return JSONResponse(
             status_code=500,

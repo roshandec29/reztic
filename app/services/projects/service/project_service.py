@@ -2,14 +2,22 @@ from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.services.projects.schemas.project_schemas import ProjectCreateRequest, ProjectListFilters, FullProjectResponse
+from app.services.projects.schemas.project_schemas import ProjectCreateRequest, ProjectListFilters, FullProjectResponse,\
+        ProjectDetailResponse
+
 from app.services.projects.repository.project_repo import (
     get_project_by_name_and_developer,
     create_project,
     create_project_units,
-    create_project_media
+    create_project_media,
+    create_project_payment,
+    create_project_additional_charges,
+    create_project_commission,
+    create_project_parking,
+    create_project_amenities,
+    create_project_nearby_landmarks
 )
-from app.utils.errors import ProjectAlreadyExistsException
+from app.utils.errors import ProjectAlreadyExistsException, ProjectNotFound
 from app.services.projects.repository.project_repo import fetch_projects, get_project_detail_id
 from typing import Tuple, List, Dict
 from uuid import UUID
@@ -38,6 +46,24 @@ class ProjectService:
             if payload.media:
                 await create_project_media(project.id, payload.media, self.db)
 
+            if payload.amenities:
+                await create_project_amenities(project.id, payload.amenities, self.db)
+
+            if payload.nearby_landmarks:
+                await create_project_nearby_landmarks(project.id, payload.nearby_landmarks, self.db)
+
+            if payload.parking:
+                await create_project_parking(project.id, payload.parking, self.db)
+
+            if payload.commission:
+                await create_project_commission(project.id, payload.commission, self.db)
+
+            if payload.additional_charges:
+                await create_project_additional_charges(project.id, payload.additional_charges, self.db)
+
+            if payload.payment:
+                await create_project_payment(project.id, payload.payment, self.db)
+
             return project
 
         except SQLAlchemyError as e:
@@ -52,12 +78,35 @@ class ProjectService:
 
         for p in projects:
             p.full_address = p.locality.full_address
+            p.total_units = len(p.units)
+            if p.units:
+                starting_price = p.units[0].base_price
+                for unit in p.units:
+                    p.starting_price = starting_price if unit.base_price > starting_price else unit.base_price
             response.append(FullProjectResponse.from_orm(p))
 
         return response, total
 
-    async def get_project_details(self, project_id: UUID) -> FullProjectResponse:
+    async def get_project_details(self, project_id: UUID) -> ProjectDetailResponse:
         project = await get_project_detail_id(self.db, project_id)
+
+        if not project:
+            raise ProjectNotFound("Project with this id doesn't exists.")
+
+        if project.units:
+            starting_price = project.units[0].base_price
+            for unit in project.units:
+                project.starting_price = starting_price if unit.base_price > starting_price else unit.base_price
+
+        project.all_amenities = [
+            {
+                "name": pa.amenity.name,
+                "icon_url": pa.amenity.icon_url
+            }
+            for pa in project.amenities
+            if pa.is_available and pa.amenity and pa.amenity.is_active
+        ]
         project.full_address = project.locality.full_address
-        return FullProjectResponse.from_orm(project)
+        return ProjectDetailResponse.from_orm(project)
+
 

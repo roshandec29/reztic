@@ -22,3 +22,8 @@ class OTPReadError(OTPError):
 class ProjectAlreadyExistsException(HTTPException):
     def __init__(self, detail="Project already exists."):
         super().__init__(status_code=status.HTTP_409_CONFLICT, detail=detail)
+
+
+class ProjectNotFound(HTTPException):
+    def __init__(self, detail="Project doesn't exist."):
+        super().__init__(status_code=status.HTTP_404_NOT_FOUND, detail=detail)
