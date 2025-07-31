@@ -1,9 +1,12 @@
 from enum import Enum
+from typing import List, Dict
 
 
 class DevelopmentStage(str, Enum):
     LAUNCHED = "launched"
     UNDER_CONSTRUCTION = "under_construction"
+    PRESALE = "presale"
+    COMPLETED = "completed"
 
 
 class FurnishingStatus(str, Enum):
@@ -88,5 +91,27 @@ class UnitType(str, Enum):
     BHK_1 = "1BHK"
     BHK_2 = "2BHK"
     BHK_3 = "3BHK"
+    BHK_4 = "4BHK"
+    BHK_5 = "5BHK"
     STUDIO = "studio"
     PENTHOUSE = "penthouse"
+
+
+CATEGORY_SUBCATEGORY_MAP: Dict[ProjectType, List[PropertyType]] = {
+    ProjectType.RESIDENTIAL: [
+        PropertyType.APARTMENT,
+        PropertyType.VILLA,
+        PropertyType.ROW_HOUSE,
+        PropertyType.PLOT,
+    ],
+    ProjectType.COMMERCIAL: [
+        PropertyType.OFFICE,
+        PropertyType.SHOP,
+        PropertyType.WAREHOUSE,
+        PropertyType.SHOWROOM,
+    ],
+    ProjectType.MIXED: [
+        PropertyType.MIXED_USE_LAND,
+        PropertyType.RETAIL_RESIDENTIAL_COMPLEX,
+    ],
+}

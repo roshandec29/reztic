@@ -16,6 +16,7 @@ class NearbyLandmark(Base):
     type = Column(String(50), nullable=False)  # e.g., "hospital", "school", "mall"
     distance_km = Column(Float, nullable=True)
     location_url = Column(String(255), nullable=True)
+    icon_url = Column(String(255), nullable=True)
 
     is_active = Column(Boolean, default=True)
 

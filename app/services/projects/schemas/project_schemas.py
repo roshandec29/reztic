@@ -1,27 +1,9 @@
 from pydantic import BaseModel, HttpUrl, Field, model_validator, field_validator
-from typing import Optional, List, Dict
+from typing import Optional, Text, List, Dict, Set
 from uuid import UUID
 from datetime import date, datetime
 from .enums import *
-
-CATEGORY_SUBCATEGORY_MAP: Dict[ProjectType, List[PropertyType]] = {
-    ProjectType.RESIDENTIAL: [
-        PropertyType.APARTMENT,
-        PropertyType.VILLA,
-        PropertyType.ROW_HOUSE,
-        PropertyType.PLOT,
-    ],
-    ProjectType.COMMERCIAL: [
-        PropertyType.OFFICE,
-        PropertyType.SHOP,
-        PropertyType.WAREHOUSE,
-        PropertyType.SHOWROOM,
-    ],
-    ProjectType.MIXED: [
-        PropertyType.MIXED_USE_LAND,
-        PropertyType.RETAIL_RESIDENTIAL_COMPLEX,
-    ],
-}
+from fastapi import Query
 
 
 class ProjectUnitCreate(BaseModel):
@@ -65,6 +47,8 @@ class ProjectBase(BaseModel):
     badges: Optional[List[str]] = []
     project_type: ProjectType
     property_type: PropertyType
+    project_size: Optional[float] = 0
+    project_size_unit: Optional[str]
 
     @model_validator(mode='after')
     def validate_project_property_type(self):
@@ -223,8 +207,12 @@ class ProjectListFilters(BaseModel):
     max_price: Optional[float] = None
     project_type: Optional[ProjectType] = None
     property_type: Optional[PropertyType] = None
+    unit_type: Optional[List[UnitType]] = Query(default=None)
+    bedrooms: Optional[List[str]] = Query(default=None)
+    balconies: Optional[List[str]] = Query(default=None)
     is_featured: Optional[bool] = None
     badges: Optional[List[str]] = None
+    possession_date: Optional[int] = None
     sort_by: Optional[str] = "created_at"  # created_at, starting_price
     sort_order: Optional[str] = "desc"  # asc or desc
     page: int = Field(default=1, ge=1)
@@ -273,7 +261,6 @@ class FullProjectResponse(BaseModel):
     development_stage: DevelopmentStage
     possession_date: Optional[date]
     starting_price: Optional[float]
-    total_units: Optional[int] = 0
     is_featured: Optional[bool]
     badges: Optional[List[str]]
     created_at: Optional[date]
@@ -324,18 +311,32 @@ class FullProjectResponse(BaseModel):
         return v
 
 
+class LocalityResponse(BaseModel):
+    name: str
+    latitude: float
+    longitude: float
+
+    model_config = {"from_attributes": True}
+
+
 class ProjectDetailResponse(BaseModel):
     id: UUID
     name: str
+    description: Text
     project_type: ProjectType
     property_type: PropertyType
     development_stage: DevelopmentStage
+    configuration: Optional[Set[str]] = Set
+    project_size: Optional[float] = 0
+    project_size_unit: Optional[str]
+    unit_size_range: Optional[List[int]] = []
     possession_date: Optional[date]
     starting_price: Optional[float]
     total_units: Optional[int] = 0
     is_featured: Optional[bool]
     badges: Optional[List[str]]
     created_at: Optional[date]
+    updated_at: Optional[date]
 
     # Nested
     units: List[ProjectUnitResponse] = []
@@ -346,8 +347,7 @@ class ProjectDetailResponse(BaseModel):
     commissions: List[ProjectCommissionResponse] = []
     parking: List[ParkingChargeResponse] = []
     payment_plan: List[PaymentResponse] = []
-
-    locality: Optional[str]
+    locality: Optional[LocalityResponse] = Dict
     full_address: Optional[str] = ""
 
     model_config = {
@@ -366,13 +366,19 @@ class ProjectDetailResponse(BaseModel):
             return v.date()
         return v
 
-    @field_validator("locality", mode="before")
-    def extract_locality_name(cls, v):
-        if isinstance(v, dict):
-            return v.get("name")
-        elif hasattr(v, "name"):
-            return v.name
+    @field_validator('updated_at', mode="before")
+    def extract_updated_date(cls, v: datetime):
+        if isinstance(v, datetime):
+            return v.date()
         return v
+
+    # @field_validator("locality", mode="before")
+    # def extract_locality_name(cls, v):
+    #     if isinstance(v, dict):
+    #         return v.get("name")
+    #     elif hasattr(v, "name"):
+    #         return v.name
+    #     return v
 
     @field_validator("full_address", mode="before")
     def extract_full_address(cls, v):

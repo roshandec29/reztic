@@ -3,7 +3,7 @@ from app.services.projects.models.other_models import ProjectAmenity, ParkingCha
 from app.services.projects.models.payment_plan_models import PaymentPlan, PaymentPlanBreakup, AdditionalCharge
 from app.services.geolocation.models.geolocation_models import Area, City, State
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, or_, and_, func, desc, asc
+from sqlalchemy import select, or_, and_, func, desc, asc, extract
 from app.services.projects.schemas.project_schemas import ProjectListFilters
 from sqlalchemy.orm import selectinload, joinedload
 from app.services.geolocation.models.geolocation_models import Locality
@@ -94,19 +94,33 @@ async def fetch_projects(session: AsyncSession, filters: ProjectListFilters):
             )
         )
 
+    unit_subquery = select(ProjectUnit.project_id).where(
+        and_(
+            ProjectUnit.unit_type.in_(filters.unit_type) if filters.unit_type else True,
+            ProjectUnit.bedrooms.in_(filters.bedrooms) if filters.bedrooms else True,
+            ProjectUnit.balconies.in_(filters.balconies) if filters.balconies else True,
+            ProjectUnit.base_price >= filters.min_price if filters.min_price else True,
+            ProjectUnit.base_price <= filters.max_price if filters.max_price else True,
+        )
+    ).distinct()
+
     # Filters
     if filters.development_stage:
         query = query.where(Project.development_stage == filters.development_stage)
+    if filters.project_type:
+        query = query.where(Project.project_type == filters.project_type)
+    if filters.property_type:
+        query = query.where(Project.property_type == filters.property_type)
+    if filters.possession_date:
+        query = query.where(extract("year", Project.possession_date) == filters.possession_date)
     if filters.locality_id:
         query = query.where(Project.locality_id == filters.locality_id)
     if filters.developer_id:
         query = query.where(Project.developer_id == filters.developer_id)
     if filters.is_featured is not None:
         query = query.where(Project.is_featured == filters.is_featured)
-    if filters.min_price:
-        query = query.where(Project.starting_price >= filters.min_price)
-    if filters.max_price:
-        query = query.where(Project.starting_price <= filters.max_price)
+    if filters.unit_type or filters.bedrooms or filters.balconies or filters.min_price or filters.max_price:
+        query = query.where(Project.id.in_(unit_subquery))
     if filters.badges:
         for badge in filters.badges:
             query = query.where(badge == func.any(Project.badges))

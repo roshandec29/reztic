@@ -78,7 +78,7 @@ class ProjectService:
 
         for p in projects:
             p.full_address = p.locality.full_address
-            p.total_units = len(p.units)
+
             if p.units:
                 starting_price = p.units[0].base_price
                 for unit in p.units:
@@ -94,9 +94,19 @@ class ProjectService:
             raise ProjectNotFound("Project with this id doesn't exists.")
 
         if project.units:
+            project.total_units = len(project.units)
             starting_price = project.units[0].base_price
+            configuration = set()
+            min_super_area = float('inf')
+            max_super_area = 0
             for unit in project.units:
                 project.starting_price = starting_price if unit.base_price > starting_price else unit.base_price
+                configuration.add(unit.unit_type)
+                min_super_area = min_super_area if unit.super_area_value > min_super_area else unit.super_area_value
+                max_super_area = max_super_area if unit.super_area_value < max_super_area else unit.super_area_value
+
+            project.configuration = configuration
+            project.unit_size_range = [min_super_area, max_super_area]
 
         project.all_amenities = [
             {
@@ -107,6 +117,7 @@ class ProjectService:
             if pa.is_available and pa.amenity and pa.amenity.is_active
         ]
         project.full_address = project.locality.full_address
+
         return ProjectDetailResponse.from_orm(project)
 
 

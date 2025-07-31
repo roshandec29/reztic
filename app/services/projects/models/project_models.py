@@ -22,6 +22,8 @@ class Project(Base):
     property_type = Column(String, nullable=False)
     rera_number = Column(String)
     furnishing_status = Column(String, default="NA")
+    project_size = Column(Float, default=0, nullable=True)
+    project_size_unit = Column(String(10), default="sqft")
     is_active = Column(Boolean, default=True)
     is_deleted = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
